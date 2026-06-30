@@ -1,0 +1,45 @@
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+
+  const search = req.nextUrl.searchParams.get("q") || "";
+  const clientes = await prisma.cliente.findMany({
+    where: {
+      userId: session.user.id,
+      ativo: true,
+      ...(search && {
+        OR: [
+          { nome: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } },
+          { telefone: { contains: search } },
+        ],
+      }),
+    },
+    include: { _count: { select: { cobrancas: true } } },
+    orderBy: { nome: "asc" },
+  });
+
+  return NextResponse.json(clientes);
+}
+
+export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+
+  const body = await req.json();
+  const { nome, telefone, email, cpf, endereco, observ } = body;
+
+  if (!nome || !telefone) {
+    return NextResponse.json({ error: "Nome e telefone são obrigatórios." }, { status: 400 });
+  }
+
+  const cliente = await prisma.cliente.create({
+    data: { nome, telefone, email, cpf, endereco, observ, userId: session.user.id },
+  });
+
+  return NextResponse.json(cliente, { status: 201 });
+}

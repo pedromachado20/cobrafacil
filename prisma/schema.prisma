@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  telefone  String?
+  empresa   String?
+  chavePix  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clientes  Cliente[]
+  cobrancas Cobranca[]
+  configWpp ConfigWhatsApp?
+}
+
+model Cliente {
+  id        String     @id @default(cuid())
+  nome      String
+  telefone  String
+  email     String?
+  cpf       String?
+  endereco  String?
+  observ    String?
+  ativo     Boolean    @default(true)
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cobrancas Cobranca[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([userId])
+}
+
+model Cobranca {
+  id         String       @id @default(cuid())
+  descricao  String
+  valor      Decimal      @db.Decimal(10, 2)
+  vencimento DateTime
+  status     Status       @default(PENDENTE)
+  clienteId  String
+  cliente    Cliente      @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lembretes  Lembrete[]
+  pagoEm     DateTime?
+  observ     String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([clienteId])
+  @@index([vencimento])
+  @@index([status])
+}
+
+model Lembrete {
+  id         String       @id @default(cuid())
+  cobrancaId String
+  cobranca   Cobranca     @relation(fields: [cobrancaId], references: [id], onDelete: Cascade)
+  tipo       TipoLembrete
+  enviadoEm  DateTime     @default(now())
+  sucesso    Boolean
+  erro       String?
+
+  @@index([cobrancaId])
+}
+
+model ConfigWhatsApp {
+  id            String  @id @default(cuid())
+  userId        String  @unique
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ativo         Boolean @default(true)
+  msgAntes3dias String  @default("Olá {nome}! 👋 Lembrando que sua cobrança de *R$ {valor}* referente a *{descricao}* vence em *3 dias* ({vencimento}). Qualquer dúvida, estamos à disposição!")
+  msgNoDia      String  @default("Olá {nome}! 📅 Hoje é o vencimento da sua cobrança de *R$ {valor}* referente a *{descricao}*. Pague hoje para evitar atrasos! Chave PIX: *{pix}*")
+  msgApos1dia   String  @default("Olá {nome}! ⚠️ Sua cobrança de *R$ {valor}* referente a *{descricao}* está em atraso desde ontem ({vencimento}). Por favor, regularize o quanto antes. Chave PIX: *{pix}*")
+}
+
+enum Status {
+  PENDENTE
+  PAGO
+  VENCIDO
+  CANCELADO
+}
+
+enum TipoLembrete {
+  ANTES_3_DIAS
+  NO_DIA
+  APOS_1_DIA
+}
