@@ -1,6 +1,7 @@
 const INSTANCE_ID = process.env.ZAPI_INSTANCE_ID!;
 const TOKEN = process.env.ZAPI_TOKEN!;
 const BASE_URL = process.env.ZAPI_BASE_URL!;
+const CLIENT_TOKEN = process.env.ZAPI_CLIENT_TOKEN!;
 
 export async function sendWhatsApp(phone: string, message: string) {
   const cleanedPhone = phone.replace(/\D/g, "");
@@ -12,7 +13,10 @@ export async function sendWhatsApp(phone: string, message: string) {
 
   const response = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Client-Token": CLIENT_TOKEN,
+    },
     body: JSON.stringify({
       phone: phoneWithCountry,
       message,
