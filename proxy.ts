@@ -11,8 +11,13 @@ export default auth((req) => {
   const isCron = req.nextUrl.pathname.startsWith("/api/cron");
   const isConviteApi = /^\/api\/convites\/[^/]+$/.test(req.nextUrl.pathname);
   const isWebhook = req.nextUrl.pathname.startsWith("/api/webhooks/");
+  const isPublicMarketing =
+    req.nextUrl.pathname === "/" ||
+    req.nextUrl.pathname.startsWith("/precos") ||
+    req.nextUrl.pathname.startsWith("/termos") ||
+    req.nextUrl.pathname.startsWith("/privacidade");
 
-  if (isApiAuth || isCron || isConviteApi || isWebhook) return NextResponse.next();
+  if (isApiAuth || isCron || isConviteApi || isWebhook || isPublicMarketing) return NextResponse.next();
 
   if (!isLoggedIn && !isAuthPage) {
     return NextResponse.redirect(new URL("/login", req.url));
