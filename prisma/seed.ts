@@ -10,6 +10,17 @@ const prisma = new PrismaClient({ adapter } as any);
 async function main() {
   console.log("🌱 Populando banco de dados...");
 
+  const planosData = [
+    { slug: "starter", nome: "Starter", precoMensal: 29.9, maxClientes: 20, maxCobrancasMes: 40, maxUsuarios: 1, ordem: 1 },
+    { slug: "professional", nome: "Professional", precoMensal: 79.9, maxClientes: 100, maxCobrancasMes: 300, maxUsuarios: 5, ordem: 2 },
+    { slug: "business", nome: "Business", precoMensal: 179.9, maxClientes: -1, maxCobrancasMes: -1, maxUsuarios: -1, ordem: 3 },
+  ];
+
+  for (const p of planosData) {
+    await prisma.plano.upsert({ where: { slug: p.slug }, update: p, create: p });
+  }
+  console.log("✅ Planos criados/atualizados:", planosData.length);
+
   const senha = await bcrypt.hash("123456", 10);
 
   const empresa = await prisma.empresa.upsert({
@@ -37,6 +48,19 @@ async function main() {
   });
 
   console.log("✅ Usuário criado:", user.email);
+
+  const planoProfessional = await prisma.plano.findUniqueOrThrow({ where: { slug: "professional" } });
+  await prisma.assinatura.upsert({
+    where: { empresaId: empresa.id },
+    update: {},
+    create: {
+      empresaId: empresa.id,
+      planoId: planoProfessional.id,
+      status: "TRIAL",
+      trialFim: new Date(Date.now() + 14 * 86400000),
+    },
+  });
+  console.log("✅ Assinatura de teste criada");
 
   const clientesData = [
     { id: `${empresa.id}-1`, nome: "Pedro Machado (Você)", telefone: "21988875063", email: "pedro@teste.com", cpf: "000.000.000-00", empresaId: empresa.id, criadoPorId: user.id },

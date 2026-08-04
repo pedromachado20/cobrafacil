@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { checkLimite, LimiteExcedidoError } from "@/lib/limites";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -42,6 +43,13 @@ export async function POST(req: NextRequest) {
 
   const cliente = await prisma.cliente.findFirst({ where: { id: clienteId, empresaId: session.user.empresaId } });
   if (!cliente) return NextResponse.json({ error: "Cliente não encontrado." }, { status: 404 });
+
+  try {
+    await checkLimite(session.user.empresaId, "cobranca");
+  } catch (err) {
+    if (err instanceof LimiteExcedidoError) return NextResponse.json({ error: err.message }, { status: 402 });
+    throw err;
+  }
 
   const cobranca = await prisma.cobranca.create({
     data: {

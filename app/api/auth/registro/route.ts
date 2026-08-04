@@ -21,6 +21,8 @@ export async function POST(req: NextRequest) {
   const hashed = await bcrypt.hash(password, 10);
   const nomeEmpresa = (empresa || "").trim() || `${name} — Empresa`;
 
+  const planoTrial = await prisma.plano.findUnique({ where: { slug: "starter" } });
+
   const user = await prisma.$transaction(async (tx) => {
     const novaEmpresa = await tx.empresa.create({
       data: {
@@ -29,6 +31,17 @@ export async function POST(req: NextRequest) {
         configWpp: { create: {} },
       },
     });
+
+    if (planoTrial) {
+      await tx.assinatura.create({
+        data: {
+          empresaId: novaEmpresa.id,
+          planoId: planoTrial.id,
+          status: "TRIAL",
+          trialFim: new Date(Date.now() + 14 * 86400000),
+        },
+      });
+    }
 
     return tx.user.create({
       data: {

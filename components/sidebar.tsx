@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   UserCog,
+  CreditCard,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,7 @@ const nav = [
   { href: "/whatsapp", icon: MessageCircle, label: "WhatsApp" },
   { href: "/relatorios", icon: BarChart3, label: "Relatórios" },
   { href: "/equipe", icon: UserCog, label: "Equipe" },
+  { href: "/assinatura", icon: CreditCard, label: "Assinatura" },
 ];
 
 export function Sidebar() {
