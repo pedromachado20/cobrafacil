@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.id || !session.user.empresaId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const dataInicio = req.nextUrl.searchParams.get("inicio");
   const dataFim = req.nextUrl.searchParams.get("fim");

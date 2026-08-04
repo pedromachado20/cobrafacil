@@ -6,7 +6,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.id || !session.user.empresaId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const { cobrancaId } = await req.json();
 

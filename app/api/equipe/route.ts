@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.id || !session.user.empresaId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const membros = await prisma.user.findMany({
     where: { empresaId: session.user.empresaId },
@@ -17,7 +17,7 @@ export async function GET() {
 
 export async function DELETE(req: NextRequest) {
   const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.id || !session.user.empresaId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   if (session.user.role !== "OWNER") {
     return NextResponse.json({ error: "Apenas o dono da empresa pode remover membros." }, { status: 403 });
   }

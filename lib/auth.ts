@@ -47,6 +47,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.empresaId = user.empresaId;
         token.role = user.role;
+      } else if (token.id && !token.empresaId) {
+        // Sessão antiga (anterior ao multi-tenancy): completa o token na próxima requisição.
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id },
+          select: { empresaId: true, role: true },
+        });
+        if (dbUser) {
+          token.empresaId = dbUser.empresaId;
+          token.role = dbUser.role;
+        }
       }
       return token;
     },

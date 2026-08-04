@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.id || !session.user.empresaId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const config = await prisma.configWhatsApp.findUnique({ where: { empresaId: session.user.empresaId } });
   const empresa = await prisma.empresa.findUnique({ where: { id: session.user.empresaId }, select: { chavePix: true, nome: true } });
@@ -14,7 +14,7 @@ export async function GET() {
 
 export async function PUT(req: NextRequest) {
   const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.id || !session.user.empresaId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const body = await req.json();
   const { ativo, msgAntes3dias, msgNoDia, msgApos1dia, chavePix, empresa } = body;

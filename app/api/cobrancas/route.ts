@@ -5,7 +5,7 @@ import { checkLimite, LimiteExcedidoError } from "@/lib/limites";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.id || !session.user.empresaId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const status = req.nextUrl.searchParams.get("status");
   const clienteId = req.nextUrl.searchParams.get("clienteId");
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.id || !session.user.empresaId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const body = await req.json();
   const { descricao, valor, vencimento, clienteId, observ } = body;

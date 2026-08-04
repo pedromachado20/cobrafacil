@@ -5,7 +5,7 @@ import { sendInviteEmail } from "@/lib/email";
 
 export async function GET() {
   const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.id || !session.user.empresaId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const convites = await prisma.convite.findMany({
     where: { empresaId: session.user.empresaId, aceitoEm: null },
@@ -17,7 +17,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.id || !session.user.empresaId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   if (session.user.role !== "OWNER") {
     return NextResponse.json({ error: "Apenas o dono da empresa pode convidar membros." }, { status: 403 });
   }

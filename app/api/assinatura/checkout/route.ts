@@ -5,7 +5,7 @@ import { findOrCreateCustomer, createSubscription, getSubscriptionInvoiceUrl } f
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.id || !session.user.empresaId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   if (session.user.role !== "OWNER") {
     return NextResponse.json({ error: "Apenas o dono da empresa pode gerenciar a assinatura." }, { status: 403 });
   }
