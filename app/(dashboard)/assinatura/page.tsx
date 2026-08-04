@@ -5,6 +5,8 @@ import { CreditCard, Check, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/utils";
 
 interface Plano {
@@ -42,6 +44,8 @@ export default function AssinaturaPage() {
   const [loading, setLoading] = useState(true);
   const [processando, setProcessando] = useState<string | null>(null);
   const [erro, setErro] = useState("");
+  const [cnpj, setCnpj] = useState<string | null>(null);
+  const [cpfCnpjInput, setCpfCnpjInput] = useState("");
 
   const carregar = useCallback(async () => {
     const res = await fetch("/api/assinatura");
@@ -49,6 +53,7 @@ export default function AssinaturaPage() {
     setAssinatura(data.assinatura);
     setPlanos(data.planos);
     setUso({ usoClientes: data.usoClientes, usoCobrancas: data.usoCobrancas });
+    setCnpj(data.cnpj);
     setLoading(false);
   }, []);
 
@@ -58,12 +63,17 @@ export default function AssinaturaPage() {
   }, [carregar]);
 
   async function assinar(planoId: string) {
+    if (!cnpj && !cpfCnpjInput.trim()) {
+      setErro("Informe o CPF ou CNPJ da empresa antes de assinar.");
+      return;
+    }
+
     setProcessando(planoId);
     setErro("");
     const res = await fetch("/api/assinatura/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ planoId }),
+      body: JSON.stringify({ planoId, cpfCnpj: cnpj || cpfCnpjInput.replace(/\D/g, "") }),
     });
     const data = await res.json();
 
@@ -121,6 +131,19 @@ export default function AssinaturaPage() {
       )}
 
       {erro && <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3">{erro}</div>}
+
+      {isOwner && !cnpj && (
+        <Card>
+          <CardContent className="p-5 space-y-1.5">
+            <Label>CPF ou CNPJ da empresa</Label>
+            <Input
+              placeholder="Necessário para gerar cobranças no Asaas"
+              value={cpfCnpjInput}
+              onChange={(e) => setCpfCnpjInput(e.target.value)}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {isOwner && (
         <div className="grid gap-4 sm:grid-cols-3">

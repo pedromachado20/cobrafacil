@@ -6,7 +6,7 @@ export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  const [assinatura, planos, usoClientes, usoCobrancas] = await Promise.all([
+  const [assinatura, planos, usoClientes, usoCobrancas, empresa] = await Promise.all([
     prisma.assinatura.findUnique({ where: { empresaId: session.user.empresaId }, include: { plano: true } }),
     prisma.plano.findMany({ where: { ativo: true }, orderBy: { ordem: "asc" } }),
     prisma.cliente.count({ where: { empresaId: session.user.empresaId, ativo: true } }),
@@ -16,7 +16,8 @@ export async function GET() {
         createdAt: { gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) },
       },
     }),
+    prisma.empresa.findUnique({ where: { id: session.user.empresaId }, select: { cnpj: true } }),
   ]);
 
-  return NextResponse.json({ assinatura, planos, usoClientes, usoCobrancas });
+  return NextResponse.json({ assinatura, planos, usoClientes, usoCobrancas, cnpj: empresa?.cnpj || null });
 }

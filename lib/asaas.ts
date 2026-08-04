@@ -22,11 +22,22 @@ interface AsaasCustomer {
   id: string;
   name: string;
   email: string;
+  cpfCnpj: string | null;
 }
 
-export async function findOrCreateCustomer(params: { name: string; email: string; cpfCnpj?: string }): Promise<AsaasCustomer> {
+export async function findOrCreateCustomer(params: { name: string; email: string; cpfCnpj: string }): Promise<AsaasCustomer> {
   const found = await asaasFetch<{ data: AsaasCustomer[] }>(`/customers?email=${encodeURIComponent(params.email)}`);
-  if (found.data.length > 0) return found.data[0];
+
+  if (found.data.length > 0) {
+    const customer = found.data[0];
+    if (!customer.cpfCnpj) {
+      return asaasFetch<AsaasCustomer>(`/customers/${customer.id}`, {
+        method: "POST",
+        body: JSON.stringify({ cpfCnpj: params.cpfCnpj }),
+      });
+    }
+    return customer;
+  }
 
   return asaasFetch<AsaasCustomer>("/customers", {
     method: "POST",
