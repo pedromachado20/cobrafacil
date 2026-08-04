@@ -48,13 +48,19 @@ export default function AssinaturaPage() {
   const [cpfCnpjInput, setCpfCnpjInput] = useState("");
 
   const carregar = useCallback(async () => {
-    const res = await fetch("/api/assinatura");
-    const data = await res.json();
-    setAssinatura(data.assinatura);
-    setPlanos(data.planos);
-    setUso({ usoClientes: data.usoClientes, usoCobrancas: data.usoCobrancas });
-    setCnpj(data.cnpj);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/assinatura");
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || `Erro ${res.status} ao carregar assinatura.`);
+      const data = await res.json();
+      setAssinatura(data.assinatura);
+      setPlanos(data.planos);
+      setUso({ usoClientes: data.usoClientes, usoCobrancas: data.usoCobrancas });
+      setCnpj(data.cnpj);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao carregar assinatura.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {

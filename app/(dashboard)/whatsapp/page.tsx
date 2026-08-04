@@ -140,13 +140,21 @@ function GuiaEvolution() {
 export default function WhatsAppPage() {
   const [config, setConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [aba, setAba] = useState<Aba>("guia");
   const [provider, setProvider] = useState<"zapi" | "evolution">("zapi");
 
   useEffect(() => {
-    fetch("/api/whatsapp/config").then(r => r.json()).then(d => { setConfig(d); setLoading(false); });
+    fetch("/api/whatsapp/config")
+      .then(async (r) => {
+        if (!r.ok) throw new Error((await r.json().catch(() => null))?.error || `Erro ${r.status} ao carregar configuração.`);
+        return r.json();
+      })
+      .then((d) => setConfig(d))
+      .catch((e) => setErro(e.message || "Erro ao carregar configuração do WhatsApp."))
+      .finally(() => setLoading(false));
   }, []);
 
   async function salvar() {
@@ -162,6 +170,16 @@ export default function WhatsAppPage() {
   }
 
   if (loading) return <div className="flex justify-center py-20"><div className="animate-spin h-8 w-8 border-4 border-emerald-600 border-t-transparent rounded-full" /></div>;
+
+  if (erro || !config) {
+    return (
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3">
+          {erro || "Não foi possível carregar a configuração do WhatsApp."}
+        </div>
+      </div>
+    );
+  }
 
   const abas: { id: Aba; label: string; icon: React.ReactNode }[] = [
     { id: "guia", label: "Como Configurar", icon: <BookOpen className="h-4 w-4" /> },
