@@ -14,6 +14,7 @@ import {
   X,
   UserCog,
   CreditCard,
+  BookOpen,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ const nav = [
   { href: "/relatorios", icon: BarChart3, label: "Relatórios" },
   { href: "/equipe", icon: UserCog, label: "Equipe" },
   { href: "/assinatura", icon: CreditCard, label: "Assinatura" },
+  { href: "/manual", icon: BookOpen, label: "Manual do Usuário" },
 ];
 
 export function Sidebar() {
@@ -36,7 +38,7 @@ export function Sidebar() {
     <>
       {/* Mobile toggle */}
       <button
-        className="fixed top-4 left-4 z-50 lg:hidden bg-emerald-600 text-white p-2 rounded-lg shadow-lg"
+        className="no-print fixed top-4 left-4 z-50 lg:hidden bg-emerald-600 text-white p-2 rounded-lg shadow-lg"
         onClick={() => setOpen(!open)}
       >
         {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -53,7 +55,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300",
+          "no-print fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300",
           "lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full"
         )}
