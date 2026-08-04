@@ -11,20 +11,20 @@ export async function POST(req: NextRequest) {
   const { cobrancaId } = await req.json();
 
   const cobranca = await prisma.cobranca.findFirst({
-    where: { id: cobrancaId, userId: session.user.id },
-    include: { cliente: true, user: true },
+    where: { id: cobrancaId, empresaId: session.user.empresaId },
+    include: { cliente: true, empresa: true },
   });
 
   if (!cobranca) return NextResponse.json({ error: "Cobrança não encontrada" }, { status: 404 });
 
-  const config = await prisma.configWhatsApp.findUnique({ where: { userId: session.user.id } });
+  const config = await prisma.configWhatsApp.findUnique({ where: { empresaId: session.user.empresaId } });
 
   const vars = {
     nome: cobranca.cliente.nome,
     valor: formatCurrency(Number(cobranca.valor)),
     descricao: cobranca.descricao,
     vencimento: formatDate(cobranca.vencimento),
-    pix: cobranca.user.chavePix || "não informado",
+    pix: cobranca.empresa.chavePix || "não informado",
   };
 
   const mensagem = buildMessage(config?.msgNoDia || "Olá {nome}! Sua cobrança de *R$ {valor}* referente a *{descricao}* vence em {vencimento}. PIX: {pix}", vars);

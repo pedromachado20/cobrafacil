@@ -8,7 +8,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
 
   const cobranca = await prisma.cobranca.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, empresaId: session.user.empresaId },
     include: { cliente: true, lembretes: { orderBy: { enviadoEm: "desc" } } },
   });
 
@@ -34,7 +34,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const result = await prisma.cobranca.updateMany({
-    where: { id, userId: session.user.id },
+    where: { id, empresaId: session.user.empresaId },
     data,
   });
 
@@ -47,6 +47,6 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const { id } = await params;
 
-  await prisma.cobranca.deleteMany({ where: { id, userId: session.user.id } });
+  await prisma.cobranca.deleteMany({ where: { id, empresaId: session.user.empresaId } });
   return NextResponse.json({ success: true });
 }

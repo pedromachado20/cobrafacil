@@ -6,57 +6,79 @@ datasource db {
   provider = "postgresql"
 }
 
+model Empresa {
+  id        String   @id @default(cuid())
+  nome      String
+  cnpj      String?
+  chavePix  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  usuarios   User[]
+  clientes   Cliente[]
+  cobrancas  Cobranca[]
+  configWpp  ConfigWhatsApp?
+  convites   Convite[]
+}
+
 model User {
   id        String   @id @default(cuid())
   name      String
   email     String   @unique
   password  String
   telefone  String?
-  empresa   String?
-  chavePix  String?
+  empresaId String
+  empresa   Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  role      Role     @default(OWNER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  clientes  Cliente[]
-  cobrancas Cobranca[]
-  configWpp ConfigWhatsApp?
+  clientesCriados  Cliente[]  @relation("CriadoPor")
+  cobrancasCriadas Cobranca[] @relation("CriadoPor")
+  convitesEnviados Convite[]
+
+  @@index([empresaId])
 }
 
 model Cliente {
-  id        String     @id @default(cuid())
-  nome      String
-  telefone  String
-  email     String?
-  cpf       String?
-  endereco  String?
-  observ    String?
-  ativo     Boolean    @default(true)
-  userId    String
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cobrancas Cobranca[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id          String     @id @default(cuid())
+  nome        String
+  telefone    String
+  email       String?
+  cpf         String?
+  endereco    String?
+  observ      String?
+  ativo       Boolean    @default(true)
+  empresaId   String
+  empresa     Empresa    @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  criadoPorId String?
+  criadoPor   User?      @relation("CriadoPor", fields: [criadoPorId], references: [id], onDelete: SetNull)
+  cobrancas   Cobranca[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
-  @@index([userId])
+  @@index([empresaId])
 }
 
 model Cobranca {
-  id         String       @id @default(cuid())
-  descricao  String
-  valor      Decimal      @db.Decimal(10, 2)
-  vencimento DateTime
-  status     Status       @default(PENDENTE)
-  clienteId  String
-  cliente    Cliente      @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  userId     String
-  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lembretes  Lembrete[]
-  pagoEm     DateTime?
-  observ     String?
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  id          String       @id @default(cuid())
+  descricao   String
+  valor       Decimal      @db.Decimal(10, 2)
+  vencimento  DateTime
+  status      Status       @default(PENDENTE)
+  clienteId   String
+  cliente     Cliente      @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  empresaId   String
+  empresa     Empresa      @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  criadoPorId String?
+  criadoPor   User?        @relation("CriadoPor", fields: [criadoPorId], references: [id], onDelete: SetNull)
+  lembretes   Lembrete[]
+  pagoEm      DateTime?
+  observ      String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
-  @@index([userId])
+  @@index([empresaId])
   @@index([clienteId])
   @@index([vencimento])
   @@index([status])
@@ -76,12 +98,34 @@ model Lembrete {
 
 model ConfigWhatsApp {
   id            String  @id @default(cuid())
-  userId        String  @unique
-  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  empresaId     String  @unique
+  empresa       Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   ativo         Boolean @default(true)
   msgAntes3dias String  @default("Olá {nome}! 👋 Lembrando que sua cobrança de *R$ {valor}* referente a *{descricao}* vence em *3 dias* ({vencimento}). Qualquer dúvida, estamos à disposição!")
   msgNoDia      String  @default("Olá {nome}! 📅 Hoje é o vencimento da sua cobrança de *R$ {valor}* referente a *{descricao}*. Pague hoje para evitar atrasos! Chave PIX: *{pix}*")
   msgApos1dia   String  @default("Olá {nome}! ⚠️ Sua cobrança de *R$ {valor}* referente a *{descricao}* está em atraso desde ontem ({vencimento}). Por favor, regularize o quanto antes. Chave PIX: *{pix}*")
+}
+
+model Convite {
+  id             String    @id @default(cuid())
+  email          String
+  empresaId      String
+  empresa        Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  role           Role      @default(MEMBER)
+  token          String    @unique @default(cuid())
+  convidadoPorId String
+  convidadoPor   User      @relation(fields: [convidadoPorId], references: [id], onDelete: Cascade)
+  expiraEm       DateTime
+  aceitoEm       DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([empresaId])
+  @@index([email])
+}
+
+enum Role {
+  OWNER
+  MEMBER
 }
 
 enum Status {

@@ -12,6 +12,7 @@ import {
   DollarSign,
   Menu,
   X,
+  UserCog,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ const nav = [
   { href: "/cobrancas", icon: FileText, label: "Cobranças" },
   { href: "/whatsapp", icon: MessageCircle, label: "WhatsApp" },
   { href: "/relatorios", icon: BarChart3, label: "Relatórios" },
+  { href: "/equipe", icon: UserCog, label: "Equipe" },
 ];
 
 export function Sidebar() {

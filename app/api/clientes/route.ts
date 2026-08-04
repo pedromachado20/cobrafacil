@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   const search = req.nextUrl.searchParams.get("q") || "";
   const clientes = await prisma.cliente.findMany({
     where: {
-      userId: session.user.id,
+      empresaId: session.user.empresaId,
       ativo: true,
       ...(search && {
         OR: [
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   }
 
   const cliente = await prisma.cliente.create({
-    data: { nome, telefone, email, cpf, endereco, observ, userId: session.user.id },
+    data: { nome, telefone, email, cpf, endereco, observ, empresaId: session.user.empresaId, criadoPorId: session.user.id },
   });
 
   return NextResponse.json(cliente, { status: 201 });

@@ -8,7 +8,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
 
   const cliente = await prisma.cliente.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, empresaId: session.user.empresaId },
     include: {
       cobrancas: { orderBy: { vencimento: "desc" }, take: 20 },
       _count: { select: { cobrancas: true } },
@@ -26,7 +26,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const body = await req.json();
 
   const cliente = await prisma.cliente.updateMany({
-    where: { id, userId: session.user.id },
+    where: { id, empresaId: session.user.empresaId },
     data: {
       nome: body.nome,
       telefone: body.telefone,
@@ -47,7 +47,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
 
   await prisma.cliente.updateMany({
-    where: { id, userId: session.user.id },
+    where: { id, empresaId: session.user.empresaId },
     data: { ativo: false },
   });
 

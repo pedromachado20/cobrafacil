@@ -30,16 +30,16 @@ export async function GET(req: NextRequest) {
   // Busca configs de usuários com WhatsApp ativo
   const configs = await prisma.configWhatsApp.findMany({
     where: { ativo: true },
-    include: { user: { select: { id: true, chavePix: true } } },
+    include: { empresa: { select: { id: true, chavePix: true } } },
   });
 
   for (const config of configs) {
-    const userId = config.user.id;
+    const empresaId = config.empresa.id;
 
     // Cobranças vencendo em 3 dias
     const antes3 = await prisma.cobranca.findMany({
       where: {
-        userId,
+        empresaId,
         status: "PENDENTE",
         vencimento: { gte: em3dias, lt: new Date(em3dias.getTime() + 86400000) },
         lembretes: { none: { tipo: "ANTES_3_DIAS", enviadoEm: { gte: hoje } } },
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
     });
 
     for (const c of antes3) {
-      const vars = { nome: c.cliente.nome, valor: formatCurrency(Number(c.valor)), descricao: c.descricao, vencimento: formatDate(c.vencimento), pix: config.user.chavePix || "" };
+      const vars = { nome: c.cliente.nome, valor: formatCurrency(Number(c.valor)), descricao: c.descricao, vencimento: formatDate(c.vencimento), pix: config.empresa.chavePix || "" };
       const msg = buildMessage(config.msgAntes3dias, vars);
       try {
         await sendWhatsApp(c.cliente.telefone, msg);
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
     // Cobranças vencendo hoje
     const noDia = await prisma.cobranca.findMany({
       where: {
-        userId,
+        empresaId,
         status: "PENDENTE",
         vencimento: { gte: hoje, lt: amanha },
         lembretes: { none: { tipo: "NO_DIA", enviadoEm: { gte: hoje } } },
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
     });
 
     for (const c of noDia) {
-      const vars = { nome: c.cliente.nome, valor: formatCurrency(Number(c.valor)), descricao: c.descricao, vencimento: formatDate(c.vencimento), pix: config.user.chavePix || "" };
+      const vars = { nome: c.cliente.nome, valor: formatCurrency(Number(c.valor)), descricao: c.descricao, vencimento: formatDate(c.vencimento), pix: config.empresa.chavePix || "" };
       const msg = buildMessage(config.msgNoDia, vars);
       try {
         await sendWhatsApp(c.cliente.telefone, msg);
@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
     // Cobranças vencidas ontem
     const apos1 = await prisma.cobranca.findMany({
       where: {
-        userId,
+        empresaId,
         status: "VENCIDO",
         vencimento: { gte: ontem, lt: hoje },
         lembretes: { none: { tipo: "APOS_1_DIA", enviadoEm: { gte: hoje } } },
@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
     });
 
     for (const c of apos1) {
-      const vars = { nome: c.cliente.nome, valor: formatCurrency(Number(c.valor)), descricao: c.descricao, vencimento: formatDate(c.vencimento), pix: config.user.chavePix || "" };
+      const vars = { nome: c.cliente.nome, valor: formatCurrency(Number(c.valor)), descricao: c.descricao, vencimento: formatDate(c.vencimento), pix: config.empresa.chavePix || "" };
       const msg = buildMessage(config.msgApos1dia, vars);
       try {
         await sendWhatsApp(c.cliente.telefone, msg);

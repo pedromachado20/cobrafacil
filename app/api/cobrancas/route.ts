@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
   const cobrancas = await prisma.cobranca.findMany({
     where: {
-      userId: session.user.id,
+      empresaId: session.user.empresaId,
       ...(status && { status: status as "PENDENTE" | "PAGO" | "VENCIDO" | "CANCELADO" }),
       ...(clienteId && { clienteId }),
       ...(search && {
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Campos obrigatórios faltando." }, { status: 400 });
   }
 
-  const cliente = await prisma.cliente.findFirst({ where: { id: clienteId, userId: session.user.id } });
+  const cliente = await prisma.cliente.findFirst({ where: { id: clienteId, empresaId: session.user.empresaId } });
   if (!cliente) return NextResponse.json({ error: "Cliente não encontrado." }, { status: 404 });
 
   const cobranca = await prisma.cobranca.create({
@@ -49,7 +49,8 @@ export async function POST(req: NextRequest) {
       valor,
       vencimento: new Date(vencimento),
       clienteId,
-      userId: session.user.id,
+      empresaId: session.user.empresaId,
+      criadoPorId: session.user.id,
       observ: observ || null,
     },
     include: { cliente: true },

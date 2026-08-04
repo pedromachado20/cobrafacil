@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   const cobrancas = await prisma.cobranca.findMany({
     where: {
-      userId: session.user.id,
+      empresaId: session.user.empresaId,
       vencimento: { gte: inicio, lte: fim },
       ...(status && status !== "TODOS" && { status: status as "PENDENTE" | "PAGO" | "VENCIDO" | "CANCELADO" }),
     },

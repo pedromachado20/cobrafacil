@@ -19,19 +19,27 @@ export async function POST(req: NextRequest) {
   }
 
   const hashed = await bcrypt.hash(password, 10);
+  const nomeEmpresa = (empresa || "").trim() || `${name} — Empresa`;
 
-  const user = await prisma.user.create({
-    data: {
-      name,
-      email,
-      password: hashed,
-      empresa: empresa || null,
-      telefone: telefone || null,
-      chavePix: chavePix || null,
-      configWpp: {
-        create: {},
+  const user = await prisma.$transaction(async (tx) => {
+    const novaEmpresa = await tx.empresa.create({
+      data: {
+        nome: nomeEmpresa,
+        chavePix: chavePix || null,
+        configWpp: { create: {} },
       },
-    },
+    });
+
+    return tx.user.create({
+      data: {
+        name,
+        email,
+        password: hashed,
+        telefone: telefone || null,
+        empresaId: novaEmpresa.id,
+        role: "OWNER",
+      },
+    });
   });
 
   return NextResponse.json({ id: user.id }, { status: 201 });

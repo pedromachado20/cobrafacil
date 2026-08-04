@@ -6,7 +6,7 @@ export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  const userId = session.user.id;
+  const empresaId = session.user.empresaId;
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
   const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59);
@@ -15,31 +15,31 @@ export async function GET() {
   const [totalPendente, totalPago, totalVencido, cobrancasRecentes, vencendoHoje, vencendo7dias] =
     await Promise.all([
       prisma.cobranca.aggregate({
-        where: { userId, status: "PENDENTE" },
+        where: { empresaId, status: "PENDENTE" },
         _sum: { valor: true },
         _count: true,
       }),
       prisma.cobranca.aggregate({
-        where: { userId, status: "PAGO", pagoEm: { gte: inicioMes, lte: fimMes } },
+        where: { empresaId, status: "PAGO", pagoEm: { gte: inicioMes, lte: fimMes } },
         _sum: { valor: true },
         _count: true,
       }),
       prisma.cobranca.aggregate({
-        where: { userId, status: "VENCIDO" },
+        where: { empresaId, status: "VENCIDO" },
         _sum: { valor: true },
         _count: true,
       }),
       prisma.cobranca.findMany({
-        where: { userId },
+        where: { empresaId },
         orderBy: { createdAt: "desc" },
         take: 5,
         include: { cliente: { select: { nome: true } } },
       }),
       prisma.cobranca.count({
-        where: { userId, status: "PENDENTE", vencimento: { gte: hoje, lt: new Date(hoje.getTime() + 86400000) } },
+        where: { empresaId, status: "PENDENTE", vencimento: { gte: hoje, lt: new Date(hoje.getTime() + 86400000) } },
       }),
       prisma.cobranca.count({
-        where: { userId, status: "PENDENTE", vencimento: { gte: hoje, lt: new Date(hoje.getTime() + 7 * 86400000) } },
+        where: { empresaId, status: "PENDENTE", vencimento: { gte: hoje, lt: new Date(hoje.getTime() + 7 * 86400000) } },
       }),
     ]);
 

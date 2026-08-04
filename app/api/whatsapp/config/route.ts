@@ -6,10 +6,10 @@ export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  const config = await prisma.configWhatsApp.findUnique({ where: { userId: session.user.id } });
-  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { chavePix: true, empresa: true } });
+  const config = await prisma.configWhatsApp.findUnique({ where: { empresaId: session.user.empresaId } });
+  const empresa = await prisma.empresa.findUnique({ where: { id: session.user.empresaId }, select: { chavePix: true, nome: true } });
 
-  return NextResponse.json({ ...config, chavePix: user?.chavePix, empresa: user?.empresa });
+  return NextResponse.json({ ...config, chavePix: empresa?.chavePix, empresa: empresa?.nome });
 }
 
 export async function PUT(req: NextRequest) {
@@ -20,14 +20,14 @@ export async function PUT(req: NextRequest) {
   const { ativo, msgAntes3dias, msgNoDia, msgApos1dia, chavePix, empresa } = body;
 
   await prisma.configWhatsApp.upsert({
-    where: { userId: session.user.id },
+    where: { empresaId: session.user.empresaId },
     update: { ativo, msgAntes3dias, msgNoDia, msgApos1dia },
-    create: { userId: session.user.id, ativo, msgAntes3dias, msgNoDia, msgApos1dia },
+    create: { empresaId: session.user.empresaId, ativo, msgAntes3dias, msgNoDia, msgApos1dia },
   });
 
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: { chavePix: chavePix || null, empresa: empresa || null },
+  await prisma.empresa.update({
+    where: { id: session.user.empresaId },
+    data: { chavePix: chavePix || null, nome: empresa || undefined },
   });
 
   return NextResponse.json({ success: true });
